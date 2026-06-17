@@ -68,7 +68,7 @@ export const RECRUITER_NAV = [
 ]
 
 export const HOW_IT_WORKS_CANDIDATE = [
-  { step: 1, title: 'Register', description: 'Create your free account and join our talent network.', icon: '/icons/register.svg' },
+  { step: 1, title: 'Register', description: 'Create your free account and join our talent network.', icon: '/icons/register_candidate.svg' },
   { step: 2, title: 'Create your Profile', description: 'Complete your profile with skills, experience and preferences.', icon: '/icons/profile.svg' },
   { step: 3, title: 'Upload your Resume', description: 'Upload your CV so employers can discover your qualifications.', icon: '/icons/resume.svg' },
   { step: 4, title: 'Apply for Jobs', description: 'Browse global opportunities and apply to roles that match your goals.', icon: '/icons/apply.svg' },

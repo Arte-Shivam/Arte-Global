@@ -99,7 +99,6 @@ export function RecruiterHomePage() {
                 <div className="w-16 h-16 rounded-2xl bg-accent-light flex items-center justify-center mx-auto mb-4">
                   <img src={step.icon} alt="" className="w-8 h-8" />
                 </div>
-                <span className="text-accent font-bold text-sm">Step {step.step}</span>
                 <h4 className="mt-2">{step.title}</h4>
                 <p className="text-sm mt-2">{step.description}</p>
               </motion.div>

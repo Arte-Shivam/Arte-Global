@@ -72,7 +72,11 @@ export function CandidateHomePage() {
       {/* Europe CTA */}
       <section className="section-padding relative">
         <div className="container-custom">
-          <div className="bg-accent rounded-3xl p-8 md:p-16 text-white relative overflow-hidden">
+          <div className="bg-accent rounded-3xl p-8 md:p-16 text-white relative overflow-hidden" style={{
+    backgroundImage: 'url(public/Europe-Arte.png)',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+  }}  >
             <GeometricShapes variant="footer" />
             <div className="relative z-10 max-w-2xl">
               <h2 className="text-white">Jobs in Europe are waiting for you!</h2>
@@ -108,7 +112,6 @@ export function CandidateHomePage() {
                 <div className="w-16 h-16 rounded-2xl bg-secondary-light flex items-center justify-center mx-auto mb-4">
                   <img src={step.icon} alt="" className="w-8 h-8" />
                 </div>
-                <span className="text-secondary font-bold text-sm">Step {step.step}</span>
                 <h4 className="mt-2">{step.title}</h4>
                 <p className="text-sm mt-2">{step.description}</p>
               </motion.div>
