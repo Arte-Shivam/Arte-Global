@@ -73,7 +73,7 @@ export function CandidateHomePage() {
       <section className="section-padding relative">
         <div className="container-custom">
           <div className="bg-accent rounded-3xl p-8 md:p-16 text-white relative overflow-hidden" style={{
-    backgroundImage: 'url(/public/Europe-Arte.png)',
+    backgroundImage: 'url(/Europe-Arte.png)',
     backgroundSize: 'cover',
     backgroundPosition: 'center',
   }}  >
