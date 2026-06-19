@@ -9,6 +9,7 @@ import { supabase, isSupabaseConfigured } from '../../lib/supabase'
 
 const schema = z.object({
   name: z.string().min(2, 'Name is required'),
+  company_name: z.string().min(2, 'Company name is required'),
   email: z.string().email('Valid email required'),
   rating: z.number().min(1).max(5),
   review: z.string().min(20, 'Review must be at least 20 characters'),
@@ -16,7 +17,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
-export function ReviewForm() {
+export function RecruiterReviewForm() {
   const [submitted, setSubmitted] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
@@ -29,8 +30,9 @@ export function ReviewForm() {
     setSubmitError(null)
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('candidate_reviews').insert({
+      const { error } = await supabase.from('recruiter_reviews').insert({
         name: data.name,
+        company_name: data.company_name,
         email: data.email,
         rating: data.rating,
         review: data.review,
@@ -43,11 +45,11 @@ export function ReviewForm() {
     }
 
     await sendEmail({
-      from_name: data.name,
+      from_name: `${data.name} (${data.company_name})`,
       from_email: data.email,
-      subject: `Candidate Review (${data.rating}/5)`,
+      subject: `Recruiter Review (${data.rating}/5)`,
       message: data.review,
-      form_type: 'candidate_review',
+      form_type: 'recruiter_review',
     })
     setSubmitted(true)
     reset()
@@ -73,8 +75,9 @@ export function ReviewForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input label="Your Name" {...register('name')} error={errors.name?.message} />
-        <Input label="Email" type="email" {...register('email')} error={errors.email?.message} />
+        <Input label="Company Name" {...register('company_name')} error={errors.company_name?.message} />
       </div>
+      <Input label="Email" type="email" {...register('email')} error={errors.email?.message} />
       <div>
         <label className="text-sm font-medium text-accent">Rating</label>
         <select

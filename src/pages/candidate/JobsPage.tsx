@@ -1,9 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { GeometricShapes } from '../../components/common/GeometricShapes'
 import { Input, Select } from '../../components/common/Input'
 import { JobCard } from '../../components/ui/JobCard'
 import { DEMO_JOBS, INDUSTRIES, COUNTRIES } from '../../data/content'
+import type { Job } from '../../types'
+import { supabase, isSupabaseConfigured } from '../../lib/supabase'
 
 type FilterTab = 'all' | 'featured' | 'urgent' | 'recent'
 
@@ -12,9 +14,37 @@ export function JobsPage() {
   const [industry, setIndustry] = useState('')
   const [country, setCountry] = useState('')
   const [tab, setTab] = useState<FilterTab>('all')
+  const [allJobs, setAllJobs] = useState<Job[]>([])
+  const [jobsLoading, setJobsLoading] = useState(true)
+  const [jobsError, setJobsError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function loadJobs() {
+      if (!isSupabaseConfigured || !supabase) {
+        setAllJobs(DEMO_JOBS)
+        setJobsLoading(false)
+        return
+      }
+      setJobsLoading(true)
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        setJobsError(error.message)
+        setAllJobs(DEMO_JOBS)
+      } else {
+        setAllJobs(data as Job[])
+      }
+      setJobsLoading(false)
+    }
+    loadJobs()
+  }, [])
 
   const filteredJobs = useMemo(() => {
-    let jobs = [...DEMO_JOBS]
+    let jobs = [...allJobs]
 
     if (tab === 'featured') jobs = jobs.filter((j) => j.is_featured)
     if (tab === 'urgent') jobs = jobs.filter((j) => j.is_urgent)
@@ -33,7 +63,7 @@ export function JobsPage() {
     if (country) jobs = jobs.filter((j) => j.country === country)
 
     return jobs
-  }, [search, industry, country, tab])
+  }, [allJobs, search, industry, country, tab])
 
   const tabs: { key: FilterTab; label: string }[] = [
     { key: 'all', label: 'All Jobs' },
@@ -105,7 +135,11 @@ export function JobsPage() {
         </div>
 
         {/* Results */}
-        {filteredJobs.length > 0 ? (
+        {jobsLoading ? (
+          <div className="text-center py-16 text-accent/60">Loading jobs...</div>
+        ) : jobsError ? (
+          <div className="text-center py-16 text-red-500">Failed to load jobs: {jobsError}</div>
+        ) : filteredJobs.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredJobs.map((job) => (
               <JobCard key={job.id} job={job} />

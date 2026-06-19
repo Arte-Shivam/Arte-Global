@@ -54,6 +54,27 @@ export interface Testimonial {
   is_active: boolean
 }
 
+export interface CandidateReview {
+  id: string
+  name: string
+  email: string
+  rating: number
+  review: string
+  is_approved: boolean
+  created_at: string
+}
+
+export interface RecruiterReview {
+  id: string
+  name: string
+  company_name: string
+  email: string
+  rating: number
+  review: string
+  is_approved: boolean
+  created_at: string
+}
+
 export interface BlogPost {
   id: string
   title: string

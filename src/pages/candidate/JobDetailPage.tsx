@@ -1,12 +1,42 @@
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { DEMO_JOBS } from '../../data/content'
 import { JobApplicationForm } from '../../components/forms/JobApplicationForm'
 import { GeometricShapes } from '../../components/common/GeometricShapes'
+import type { Job } from '../../types'
+import { supabase, isSupabaseConfigured } from '../../lib/supabase'
 
 export function JobDetailPage() {
   const { slug } = useParams()
-  const job = DEMO_JOBS.find((j) => j.slug === slug)
+  const [job, setJob] = useState<Job | null | undefined>(undefined)
+
+  useEffect(() => {
+    async function loadJob() {
+      if (!isSupabaseConfigured || !supabase) {
+        setJob(DEMO_JOBS.find((j) => j.slug === slug) ?? null)
+        return
+      }
+      setJob(undefined)
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('slug', slug)
+        .eq('status', 'active')
+        .maybeSingle()
+
+      if (error || !data) {
+        setJob(null)
+      } else {
+        setJob(data as Job)
+      }
+    }
+    loadJob()
+  }, [slug])
+
+  if (job === undefined) {
+    return <div className="section-padding text-center text-accent/60">Loading job...</div>
+  }
 
   if (!job) {
     return (

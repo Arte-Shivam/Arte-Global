@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { GeometricShapes } from '../../components/common/GeometricShapes'
@@ -9,9 +10,56 @@ import { ReviewForm } from '../../components/forms/ReviewForm'
 import {
   COMPANY, DEMO_JOBS, DEMO_MEDIA, HOW_IT_WORKS_CANDIDATE, TESTIMONIALS,
 } from '../../data/content'
+import type { Job, Testimonial } from '../../types'
+import { supabase, isSupabaseConfigured } from '../../lib/supabase'
 
 export function CandidateHomePage() {
-  const featuredJobs = DEMO_JOBS.filter((j) => j.is_featured).slice(0, 4)
+  const [featuredJobs, setFeaturedJobs] = useState<Job[]>([])
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(
+    TESTIMONIALS.filter((t) => t.type === 'candidate'),
+  )
+
+  useEffect(() => {
+    async function loadFeaturedJobs() {
+      if (!isSupabaseConfigured || !supabase) {
+        setFeaturedJobs(DEMO_JOBS.filter((j) => j.is_featured).slice(0, 4))
+        return
+      }
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('status', 'active')
+        .eq('is_featured', true)
+        .order('created_at', { ascending: false })
+        .limit(4)
+
+      if (error || !data) {
+        setFeaturedJobs(DEMO_JOBS.filter((j) => j.is_featured).slice(0, 4))
+      } else {
+        setFeaturedJobs(data as Job[])
+      }
+    }
+    loadFeaturedJobs()
+  }, [])
+
+  useEffect(() => {
+    async function loadTestimonials() {
+      if (!isSupabaseConfigured || !supabase) return
+
+      const { data, error } = await supabase
+        .from('testimonials')
+        .select('*')
+        .eq('is_active', true)
+        .eq('type', 'candidate')
+        .order('id', { ascending: false })
+
+      if (!error && data && data.length > 0) {
+        setTestimonials(data as Testimonial[])
+      }
+      // If no approved testimonials yet, keep the static fallback already in state
+    }
+    loadTestimonials()
+  }, [])
 
   return (
     <>
@@ -112,6 +160,7 @@ export function CandidateHomePage() {
                 <div className="w-16 h-16 rounded-2xl bg-secondary-light flex items-center justify-center mx-auto mb-4">
                   <img src={step.icon} alt="" className="w-8 h-8" />
                 </div>
+                <span className="text-secondary font-bold text-sm">Step {step.step}</span>
                 <h4 className="mt-2">{step.title}</h4>
                 <p className="text-sm mt-2">{step.description}</p>
               </motion.div>
@@ -121,7 +170,7 @@ export function CandidateHomePage() {
       </section>
 
       <MediaCarousel items={DEMO_MEDIA} />
-      <TestimonialsSection testimonials={TESTIMONIALS} />
+      <TestimonialsSection testimonials={testimonials} />
 
       {/* Review Form */}
       <section className="section-padding">

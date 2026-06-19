@@ -1,12 +1,37 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { GeometricShapes } from '../../components/common/GeometricShapes'
 import { Button } from '../../components/common/Button'
 import { TestimonialsSection } from '../../components/ui/TestimonialsSection'
+import { RecruiterReviewForm } from '../../components/forms/RecruiterReviewForm.tsx'
 import { HOW_IT_WORKS_RECRUITER, TESTIMONIALS } from '../../data/content'
+import type { Testimonial } from '../../types'
+import { supabase, isSupabaseConfigured } from '../../lib/supabase'
 
 export function RecruiterHomePage() {
-  const recruiterTestimonials = TESTIMONIALS.filter((t) => t.type === 'recruiter')
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(
+    TESTIMONIALS.filter((t) => t.type === 'recruiter'),
+  )
+
+  useEffect(() => {
+    async function loadTestimonials() {
+      if (!isSupabaseConfigured || !supabase) return
+
+      const { data, error } = await supabase
+        .from('testimonials')
+        .select('*')
+        .eq('is_active', true)
+        .eq('type', 'recruiter')
+        .order('id', { ascending: false })
+
+      if (!error && data && data.length > 0) {
+        setTestimonials(data as Testimonial[])
+      }
+      // If no approved testimonials yet, keep the static fallback already in state
+    }
+    loadTestimonials()
+  }, [])
 
   return (
     <>
@@ -99,6 +124,7 @@ export function RecruiterHomePage() {
                 <div className="w-16 h-16 rounded-2xl bg-accent-light flex items-center justify-center mx-auto mb-4">
                   <img src={step.icon} alt="" className="w-8 h-8" />
                 </div>
+                <span className="text-accent font-bold text-sm">Step {step.step}</span>
                 <h4 className="mt-2">{step.title}</h4>
                 <p className="text-sm mt-2">{step.description}</p>
               </motion.div>
@@ -108,21 +134,38 @@ export function RecruiterHomePage() {
       </section>
 
       <TestimonialsSection
-        testimonials={recruiterTestimonials}
+        testimonials={testimonials}
         title="What Our Partners Say"
         subtitle="Trusted by employers across industries worldwide"
       />
 
+      {/* Review Form */}
+      <section className="section-padding">
+        <div className="container-custom max-w-xl mx-auto">
+          <div className="text-center mb-8">
+            <h3>Share Your Experience</h3>
+            <p className="text-sm mt-2">Help other employers by sharing your experience partnering with Arte Recruitment</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-border/50 p-6 md:p-8 shadow-sm">
+            <RecruiterReviewForm />
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="section-padding">
         <div className="container-custom">
-          <div className="bg-secondary rounded-3xl p-8 md:p-16 text-white text-center relative overflow-hidden">
+          <div className="bg-secondary rounded-3xl p-8 md:p-16 text-white text-center relative overflow-hidden" style={{ 
+            backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url(public/arte_homepage_background.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            }}>
             <h2 className="text-white">Looking for employees?</h2>
             <p className="mt-4 text-white/80 max-w-xl mx-auto">
               Register today and we will recruit the best talent for you!
             </p>
             <Link to="/register?role=recruiter" className="inline-block mt-8">
-              <Button variant="secondary" size="lg">Get Started</Button>
+              <Button variant="primary" size="lg">Get Started</Button>
             </Link>
           </div>
         </div>
