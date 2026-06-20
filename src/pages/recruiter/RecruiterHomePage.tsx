@@ -162,7 +162,7 @@ export function RecruiterHomePage() {
       <section className="section-padding">
         <div className="container-custom">
           <div className="bg-secondary rounded-3xl p-8 md:p-16 text-white text-center relative overflow-hidden" style={{ 
-            backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(public/arte_homepage_background.jpg)',
+            backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(/arte_homepage_background.jpg)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             }}>
