@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GeometricShapes } from '../../components/common/GeometricShapes'
 import { FAQForm } from '../../components/forms/FAQForm'
 import { DEMO_FAQS } from '../../data/content'
+import type { FAQ } from '../../types'
+import { supabase, isSupabaseConfigured } from '../../lib/supabase'
 
 interface FAQPageProps {
   audience?: 'candidate' | 'recruiter'
@@ -10,8 +12,34 @@ interface FAQPageProps {
 
 export function FAQPage({ audience = 'candidate' }: FAQPageProps) {
   const [openId, setOpenId] = useState<string | null>(null)
+  const [allFaqs, setAllFaqs] = useState<FAQ[]>(DEMO_FAQS)
+  const [faqsLoading, setFaqsLoading] = useState(true)
+  const [faqsError, setFaqsError] = useState<string | null>(null)
 
-  const faqs = DEMO_FAQS.filter(
+  useEffect(() => {
+    async function loadFaqs() {
+      if (!isSupabaseConfigured || !supabase) {
+        setFaqsLoading(false)
+        return
+      }
+      setFaqsLoading(true)
+      const { data, error } = await supabase
+        .from('faqs')
+        .select('*')
+        .eq('status', 'active')
+        .order('sort_order', { ascending: true })
+
+      if (error) {
+        setFaqsError(error.message)
+      } else {
+        setAllFaqs(data as FAQ[])
+      }
+      setFaqsLoading(false)
+    }
+    loadFaqs()
+  }, [])
+
+  const faqs = allFaqs.filter(
     (f) => f.audience === audience || f.audience === 'both',
   )
 
@@ -24,6 +52,11 @@ export function FAQPage({ audience = 'candidate' }: FAQPageProps) {
           <p className="mt-3">Find answers to common questions about our services</p>
         </motion.div>
 
+        {faqsLoading ? (
+          <div className="text-center py-10 text-accent/60">Loading FAQs...</div>
+        ) : faqsError ? (
+          <div className="text-center py-10 text-red-500">Failed to load FAQs: {faqsError}</div>
+        ) : (
         <div className="space-y-3">
           {faqs.map((faq) => (
             <div key={faq.id} className="bg-white rounded-xl border border-border/50 overflow-hidden">
@@ -56,10 +89,11 @@ export function FAQPage({ audience = 'candidate' }: FAQPageProps) {
             </div>
           ))}
         </div>
+        )}
 
         <div className="mt-16 bg-secondary-light/30 rounded-2xl p-6 md:p-8">
           <h4>Can't find your answer?</h4>
-          <p className="text-sm mt-2 mb-6">Submit your question and we'll add it to our FAQ section.</p>
+          <p className="text-sm mt-2 mb-6">Submit your question and we'll answer it as soon as possible.</p>
           <FAQForm />
         </div>
       </div>

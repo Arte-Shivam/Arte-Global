@@ -6,6 +6,7 @@ import { Button } from '../../components/common/Button'
 import { JobCard } from '../../components/ui/JobCard'
 import { TestimonialsSection } from '../../components/ui/TestimonialsSection'
 import { MediaCarousel } from '../../components/ui/MediaCarousel'
+import { StatsBar } from '../../components/ui/StatsBar'
 import { ReviewForm } from '../../components/forms/ReviewForm'
 import {
   COMPANY, DEMO_JOBS, DEMO_MEDIA, HOW_IT_WORKS_CANDIDATE, TESTIMONIALS,
@@ -66,6 +67,7 @@ export function CandidateHomePage() {
       {/* Hero */}
       <section className="relative section-padding overflow-hidden">
         <GeometricShapes variant="hero" />
+        <GeometricShapes variant="route" />
         <div className="container-custom relative z-10">
           <div className="max-w-3xl">
             <motion.h1
@@ -97,11 +99,14 @@ export function CandidateHomePage() {
               </Link>
             </motion.div>
           </div>
+          <div className="mt-14 md:mt-16">
+            <StatsBar />
+          </div>
         </div>
       </section>
 
       {/* Job Search CTA */}
-      <section className="section-padding bg-secondary-light/20 relative">
+      <section className="section-padding bg-secondary-light relative">
         <GeometricShapes variant="section" />
         <div className="container-custom relative z-10 text-center">
           <h2>Recommended Jobs</h2>
@@ -120,11 +125,11 @@ export function CandidateHomePage() {
       {/* Europe CTA */}
       <section className="section-padding relative">
         <div className="container-custom">
-          <div className="bg-accent rounded-3xl p-8 md:p-16 text-white relative overflow-hidden" style={{
-    backgroundImage: 'url(/Europe-Arte.png)',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-  }}  >
+          <div className="bg-accent rounded-3xl p-8 md:p-16 text-white relative overflow-hidden" style={{ 
+            backgroundImage: 'url(public/Europe-Arte.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            }}>
             <GeometricShapes variant="footer" />
             <div className="relative z-10 max-w-2xl">
               <h2 className="text-white">Jobs in Europe are waiting for you!</h2>

@@ -19,7 +19,7 @@ export function Header({ navItems, audience }: HeaderProps) {
   const basePath = audience === 'candidate' ? '/candidate' : '/recruiter'
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-border/50">
+    <header className="sticky top-0 z-40 bg-white/60 backdrop-blur-md border-b border-border/50">
       <div className="container-custom px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           <Link to={basePath} className="flex items-center gap-3 group">

@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { Layout } from './components/layout/Layout'
 import { LandingPage } from './pages/LandingPage'
@@ -18,6 +19,7 @@ import { RegisterPage } from './pages/auth/RegisterPage'
 import { AdminPage } from './pages/admin/AdminPage'
 import { CANDIDATE_NAV, RECRUITER_NAV } from './data/content'
 import { getStoredAudience } from './lib/utils'
+import { trackPageview } from './lib/analytics'
 
 function AudienceRedirect() {
   const audience = getStoredAudience()
@@ -26,10 +28,24 @@ function AudienceRedirect() {
   return <LandingPage />
 }
 
+// Fires a GA4 pageview on every client-side route change.
+// Without this, GA only sees the very first page load since React Router
+// navigates without a full browser refresh.
+function AnalyticsTracker() {
+  const location = useLocation()
+
+  useEffect(() => {
+    trackPageview(location.pathname + location.search)
+  }, [location])
+
+  return null
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <AnalyticsTracker />
         <Routes>
           <Route path="/" element={<AudienceRedirect />} />
 

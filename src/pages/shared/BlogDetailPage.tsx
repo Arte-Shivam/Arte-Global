@@ -1,6 +1,9 @@
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { BLOG_POSTS } from '../../data/content'
 import { formatDate } from '../../lib/utils'
+import type { BlogPost } from '../../types'
+import { supabase, isSupabaseConfigured } from '../../lib/supabase'
 
 interface BlogDetailPageProps {
   basePath?: string
@@ -8,7 +11,34 @@ interface BlogDetailPageProps {
 
 export function BlogDetailPage({ basePath = '/candidate/blog' }: BlogDetailPageProps) {
   const { slug } = useParams()
-  const post = BLOG_POSTS.find((p) => p.slug === slug)
+  const [post, setPost] = useState<BlogPost | null | undefined>(undefined)
+
+  useEffect(() => {
+    async function loadPost() {
+      if (!isSupabaseConfigured || !supabase) {
+        setPost((BLOG_POSTS as BlogPost[]).find((p) => p.slug === slug) ?? null)
+        return
+      }
+      setPost(undefined)
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('slug', slug)
+        .eq('status', 'active')
+        .maybeSingle()
+
+      if (error || !data) {
+        setPost(null)
+      } else {
+        setPost(data as BlogPost)
+      }
+    }
+    loadPost()
+  }, [slug])
+
+  if (post === undefined) {
+    return <div className="section-padding text-center text-accent/60">Loading post...</div>
+  }
 
   if (!post) {
     return (
@@ -26,7 +56,12 @@ export function BlogDetailPage({ basePath = '/candidate/blog' }: BlogDetailPageP
           <img src="/icons/arrow-left.svg" alt="" className="w-4 h-4" />
           Back to Blog
         </Link>
-        <p className="text-alt">{formatDate(post.published_at)} · {post.author}</p>
+        <img
+          src={post.cover_image || '/blog-placeholder.jpg'}
+          alt=""
+          className="w-full h-64 md:h-80 object-cover rounded-2xl"
+        />
+        <p className="text-alt mt-6">{formatDate(post.published_at)} · {post.author}</p>
         <h1 className="mt-2">{post.title}</h1>
         <div className="mt-8 prose max-w-none">
           <p className="text-lg">{post.excerpt}</p>

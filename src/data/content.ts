@@ -68,7 +68,7 @@ export const RECRUITER_NAV = [
 ]
 
 export const HOW_IT_WORKS_CANDIDATE = [
-  { step: 1, title: 'Register', description: 'Create your free account and join our talent network.', icon: '/icons/register_candidate.svg' },
+  { step: 1, title: 'Register', description: 'Create your free account and join our talent network.', icon: '/icons/register.svg' },
   { step: 2, title: 'Create your Profile', description: 'Complete your profile with skills, experience and preferences.', icon: '/icons/profile.svg' },
   { step: 3, title: 'Upload your Resume', description: 'Upload your CV so employers can discover your qualifications.', icon: '/icons/resume.svg' },
   { step: 4, title: 'Apply for Jobs', description: 'Browse global opportunities and apply to roles that match your goals.', icon: '/icons/apply.svg' },
@@ -211,6 +211,7 @@ export const DEMO_FAQS: FAQ[] = [
     category: 'Applications',
     audience: 'candidate',
     sort_order: 1,
+    status: 'active' as const,
   },
   {
     id: '2',
@@ -219,6 +220,7 @@ export const DEMO_FAQS: FAQ[] = [
     category: 'General',
     audience: 'both',
     sort_order: 2,
+    status: 'active' as const,
   },
   {
     id: '3',
@@ -227,6 +229,7 @@ export const DEMO_FAQS: FAQ[] = [
     category: 'Registration',
     audience: 'candidate',
     sort_order: 3,
+    status: 'active' as const,
   },
   {
     id: '4',
@@ -235,6 +238,7 @@ export const DEMO_FAQS: FAQ[] = [
     category: 'Partnership',
     audience: 'recruiter',
     sort_order: 4,
+    status: 'active' as const,
   },
   {
     id: '5',
@@ -243,6 +247,7 @@ export const DEMO_FAQS: FAQ[] = [
     category: 'General',
     audience: 'both',
     sort_order: 5,
+    status: 'active' as const,
   },
 ]
 
@@ -272,7 +277,7 @@ export const BLOG_POSTS = [
     content: 'Europe offers incredible opportunities for skilled workers from India, Nepal and beyond. At Arte Recruitment, we have helped hundreds of candidates secure positions across Bulgaria, North Macedonia, Croatia, Serbia and more...',
     author: 'Arte Team',
     published_at: '2026-01-15',
-    is_published: true,
+    status: 'active' as const,
   },
   {
     id: '2',
@@ -282,6 +287,6 @@ export const BLOG_POSTS = [
     content: 'Preparing for an overseas job interview requires more than just reviewing your resume. Research the company culture, understand visa requirements, and practice common interview questions...',
     author: 'Arte Team',
     published_at: '2026-02-01',
-    is_published: true,
+    status: 'active' as const,
   },
 ]

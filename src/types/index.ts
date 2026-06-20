@@ -84,7 +84,9 @@ export interface BlogPost {
   cover_image?: string
   author: string
   published_at: string
-  is_published: boolean
+  status: 'active' | 'inactive' | 'draft'
+  created_at?: string
+  updated_at?: string
 }
 
 export interface FAQ {
@@ -94,6 +96,9 @@ export interface FAQ {
   category: string
   audience: 'candidate' | 'recruiter' | 'both'
   sort_order: number
+  status: 'active' | 'inactive'
+  created_at?: string
+  updated_at?: string
 }
 
 export interface MediaItem {

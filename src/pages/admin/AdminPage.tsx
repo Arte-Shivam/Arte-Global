@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../../components/common/Button'
 import { Input, Select, Textarea } from '../../components/common/Input'
-import { DEMO_JOBS, INDUSTRIES, COUNTRIES } from '../../data/content'
-import type { Job, CandidateReview, RecruiterReview } from '../../types'
+import { DEMO_JOBS, BLOG_POSTS, DEMO_FAQS, INDUSTRIES, COUNTRIES } from '../../data/content'
+import type { Job, CandidateReview, RecruiterReview, BlogPost, FAQ } from '../../types'
 import { slugify } from '../../lib/utils'
 import { supabase, isSupabaseConfigured } from '../../lib/supabase'
 
-type AdminTab = 'jobs' | 'reviews' | 'recruiter-reviews'
+type AdminTab = 'jobs' | 'reviews' | 'recruiter-reviews' | 'blogs' | 'faqs'
 
 export function AdminPage() {
   const { user, isAdmin, loading } = useAuth()
@@ -24,6 +24,16 @@ export function AdminPage() {
   const [recruiterReviews, setRecruiterReviews] = useState<RecruiterReview[]>([])
   const [recruiterReviewsLoading, setRecruiterReviewsLoading] = useState(true)
   const [recruiterReviewsError, setRecruiterReviewsError] = useState<string | null>(null)
+  const [posts, setPosts] = useState<BlogPost[]>([])
+  const [postsLoading, setPostsLoading] = useState(true)
+  const [postsError, setPostsError] = useState<string | null>(null)
+  const [editingPost, setEditingPost] = useState<BlogPost | null>(null)
+  const [showPostForm, setShowPostForm] = useState(false)
+  const [faqs, setFaqs] = useState<FAQ[]>([])
+  const [faqsLoading, setFaqsLoading] = useState(true)
+  const [faqsError, setFaqsError] = useState<string | null>(null)
+  const [editingFaq, setEditingFaq] = useState<FAQ | null>(null)
+  const [showFaqForm, setShowFaqForm] = useState(false)
 
   useEffect(() => {
     async function loadJobs() {
@@ -95,6 +105,52 @@ export function AdminPage() {
     loadRecruiterReviews()
   }, [])
 
+  useEffect(() => {
+    async function loadPosts() {
+      if (!isSupabaseConfigured || !supabase) {
+        setPosts(BLOG_POSTS as BlogPost[])
+        setPostsLoading(false)
+        return
+      }
+      setPostsLoading(true)
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        setPostsError(error.message)
+      } else {
+        setPosts(data as BlogPost[])
+      }
+      setPostsLoading(false)
+    }
+    loadPosts()
+  }, [])
+
+  useEffect(() => {
+    async function loadFaqs() {
+      if (!isSupabaseConfigured || !supabase) {
+        setFaqs(DEMO_FAQS)
+        setFaqsLoading(false)
+        return
+      }
+      setFaqsLoading(true)
+      const { data, error } = await supabase
+        .from('faqs')
+        .select('*')
+        .order('sort_order', { ascending: true })
+
+      if (error) {
+        setFaqsError(error.message)
+      } else {
+        setFaqs(data as FAQ[])
+      }
+      setFaqsLoading(false)
+    }
+    loadFaqs()
+  }, [])
+
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -103,6 +159,22 @@ export function AdminPage() {
     job_type: 'full-time',
     is_featured: false,
     is_urgent: false,
+  })
+
+  const [postForm, setPostForm] = useState({
+    title: '',
+    excerpt: '',
+    content: '',
+    cover_image: '',
+    author: 'Arte Team',
+  })
+
+  const [faqForm, setFaqForm] = useState({
+    question: '',
+    answer: '',
+    category: 'General',
+    audience: 'both' as FAQ['audience'],
+    sort_order: 0,
   })
 
   if (loading) {
@@ -218,6 +290,172 @@ export function AdminPage() {
     setJobs(jobs.map((j) => j.id === job.id ? (data as Job) : j))
   }
 
+  async function handleSavePost() {
+    if (!supabase) return
+
+    if (editingPost) {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .update({
+          ...postForm,
+          cover_image: postForm.cover_image || null,
+          slug: slugify(postForm.title),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editingPost.id)
+        .select()
+        .single()
+
+      if (error) {
+        alert('Failed to update post: ' + error.message)
+        return
+      }
+      setPosts(posts.map((p) => p.id === editingPost.id ? (data as BlogPost) : p))
+      setEditingPost(null)
+    } else {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .insert({
+          ...postForm,
+          cover_image: postForm.cover_image || null,
+          slug: slugify(postForm.title),
+          status: 'draft',
+          published_at: new Date().toISOString(),
+        })
+        .select()
+        .single()
+
+      if (error) {
+        alert('Failed to create post: ' + error.message)
+        return
+      }
+      setPosts([data as BlogPost, ...posts])
+    }
+    setShowPostForm(false)
+    setPostForm({ title: '', excerpt: '', content: '', cover_image: '', author: 'Arte Team' })
+  }
+
+  function handleEditPost(post: BlogPost) {
+    setEditingPost(post)
+    setPostForm({
+      title: post.title,
+      excerpt: post.excerpt,
+      content: post.content,
+      cover_image: post.cover_image || '',
+      author: post.author,
+    })
+    setShowPostForm(true)
+  }
+
+  async function handleDeletePost(id: string) {
+    if (!confirm('Delete this blog post?') || !supabase) return
+
+    const { error } = await supabase.from('blog_posts').delete().eq('id', id)
+    if (error) {
+      alert('Failed to delete post: ' + error.message)
+      return
+    }
+    setPosts(posts.filter((p) => p.id !== id))
+  }
+
+  async function handleChangePostStatus(post: BlogPost, newStatus: BlogPost['status']) {
+    if (!supabase) return
+
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq('id', post.id)
+      .select()
+      .single()
+
+    if (error) {
+      alert('Failed to update status: ' + error.message)
+      return
+    }
+    setPosts(posts.map((p) => p.id === post.id ? (data as BlogPost) : p))
+  }
+
+  async function handleSaveFaq() {
+    if (!supabase) return
+
+    if (editingFaq) {
+      const { data, error } = await supabase
+        .from('faqs')
+        .update({
+          ...faqForm,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editingFaq.id)
+        .select()
+        .single()
+
+      if (error) {
+        alert('Failed to update FAQ: ' + error.message)
+        return
+      }
+      setFaqs(faqs.map((f) => f.id === editingFaq.id ? (data as FAQ) : f).sort((a, b) => a.sort_order - b.sort_order))
+      setEditingFaq(null)
+    } else {
+      const { data, error } = await supabase
+        .from('faqs')
+        .insert({
+          ...faqForm,
+          status: 'active',
+        })
+        .select()
+        .single()
+
+      if (error) {
+        alert('Failed to create FAQ: ' + error.message)
+        return
+      }
+      setFaqs([...faqs, data as FAQ].sort((a, b) => a.sort_order - b.sort_order))
+    }
+    setShowFaqForm(false)
+    setFaqForm({ question: '', answer: '', category: 'General', audience: 'both', sort_order: 0 })
+  }
+
+  function handleEditFaq(faq: FAQ) {
+    setEditingFaq(faq)
+    setFaqForm({
+      question: faq.question,
+      answer: faq.answer,
+      category: faq.category,
+      audience: faq.audience,
+      sort_order: faq.sort_order,
+    })
+    setShowFaqForm(true)
+  }
+
+  async function handleDeleteFaq(id: string) {
+    if (!confirm('Delete this FAQ?') || !supabase) return
+
+    const { error } = await supabase.from('faqs').delete().eq('id', id)
+    if (error) {
+      alert('Failed to delete FAQ: ' + error.message)
+      return
+    }
+    setFaqs(faqs.filter((f) => f.id !== id))
+  }
+
+  async function handleToggleFaqStatus(faq: FAQ) {
+    if (!supabase) return
+    const newStatus: FAQ['status'] = faq.status === 'active' ? 'inactive' : 'active'
+
+    const { data, error } = await supabase
+      .from('faqs')
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq('id', faq.id)
+      .select()
+      .single()
+
+    if (error) {
+      alert('Failed to update status: ' + error.message)
+      return
+    }
+    setFaqs(faqs.map((f) => f.id === faq.id ? (data as FAQ) : f))
+  }
+
   async function handleApproveReview(review: CandidateReview) {
     if (!supabase) return
 
@@ -311,6 +549,16 @@ export function AdminPage() {
               + Add Job
             </Button>
           )}
+          {activeTab === 'blogs' && (
+            <Button variant="primary" size="sm" onClick={() => { setEditingPost(null); setShowPostForm(true) }}>
+              + Add Blog Post
+            </Button>
+          )}
+          {activeTab === 'faqs' && (
+            <Button variant="primary" size="sm" onClick={() => { setEditingFaq(null); setShowFaqForm(true) }}>
+              + Add FAQ
+            </Button>
+          )}
         </div>
 
         {/* Tabs */}
@@ -348,6 +596,22 @@ export function AdminPage() {
                 {recruiterReviews.length}
               </span>
             )}
+          </button>
+          <button
+            onClick={() => setActiveTab('blogs')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
+              activeTab === 'blogs' ? 'border-secondary text-secondary' : 'border-transparent text-accent/60'
+            }`}
+          >
+            Blogs
+          </button>
+          <button
+            onClick={() => setActiveTab('faqs')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
+              activeTab === 'faqs' ? 'border-secondary text-secondary' : 'border-transparent text-accent/60'
+            }`}
+          >
+            FAQs
           </button>
         </div>
 
@@ -555,6 +819,212 @@ export function AdminPage() {
               </div>
             ))}
           </div>
+        )}
+        </>
+        )}
+
+        {activeTab === 'blogs' && (
+        <>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+          {[
+            { label: 'Total Posts', value: posts.length },
+            { label: 'Active', value: posts.filter((p) => p.status === 'active').length },
+            { label: 'Draft', value: posts.filter((p) => p.status === 'draft').length },
+            { label: 'Inactive', value: posts.filter((p) => p.status === 'inactive').length },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-white rounded-xl border border-border/50 p-4 text-center">
+              <p className="text-2xl font-bold text-secondary">{stat.value}</p>
+              <p className="text-alt">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Blog Post Form */}
+        {showPostForm && (
+          <div className="bg-white rounded-2xl border border-border/50 p-6 mb-8">
+            <h4 className="mb-4">{editingPost ? 'Edit Blog Post' : 'New Blog Post'}</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input label="Title" value={postForm.title} onChange={(e) => setPostForm({ ...postForm, title: e.target.value })} />
+              <Input label="Author" value={postForm.author} onChange={(e) => setPostForm({ ...postForm, author: e.target.value })} />
+            </div>
+            <Input
+              label="Cover Image URL (optional)"
+              value={postForm.cover_image}
+              onChange={(e) => setPostForm({ ...postForm, cover_image: e.target.value })}
+              className="mt-4"
+              placeholder="https://... — leave blank to use the default placeholder"
+            />
+            <Textarea label="Excerpt" value={postForm.excerpt} onChange={(e) => setPostForm({ ...postForm, excerpt: e.target.value })} className="mt-4" />
+            <Textarea label="Content" value={postForm.content} onChange={(e) => setPostForm({ ...postForm, content: e.target.value })} className="mt-4" />
+            <div className="flex gap-3 mt-6">
+              <Button variant="primary" size="sm" onClick={handleSavePost}>Save</Button>
+              <Button variant="ghost" size="sm" onClick={() => { setShowPostForm(false); setEditingPost(null) }}>Cancel</Button>
+            </div>
+          </div>
+        )}
+
+        {/* Blog Posts Table */}
+        {postsLoading ? (
+          <div className="bg-white rounded-2xl border border-border/50 p-10 text-center text-accent/60">
+            Loading posts...
+          </div>
+        ) : postsError ? (
+          <div className="bg-white rounded-2xl border border-red-200 p-10 text-center text-red-500">
+            Failed to load posts: {postsError}
+          </div>
+        ) : (
+        <div className="bg-white rounded-2xl border border-border/50 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-accent/5">
+                <tr>
+                  <th className="text-left p-4 font-medium">Title</th>
+                  <th className="text-left p-4 font-medium hidden md:table-cell">Author</th>
+                  <th className="text-left p-4 font-medium">Status</th>
+                  <th className="text-right p-4 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {posts.map((post) => (
+                  <tr key={post.id} className="border-t border-border/50 hover:bg-accent/5">
+                    <td className="p-4">
+                      <p className="font-medium">{post.title}</p>
+                    </td>
+                    <td className="p-4 hidden md:table-cell text-accent/60">{post.author}</td>
+                    <td className="p-4">
+                      <span className={`px-2 py-0.5 text-xs rounded-full ${
+                        post.status === 'active'
+                          ? 'bg-green-50 text-green-600'
+                          : post.status === 'inactive'
+                          ? 'bg-red-50 text-red-500'
+                          : 'bg-accent/10 text-accent/60'
+                      }`}>{post.status}</span>
+                    </td>
+                    <td className="p-4 text-right">
+                      <select
+                        value={post.status}
+                        onChange={(e) => handleChangePostStatus(post, e.target.value as BlogPost['status'])}
+                        className="text-xs border border-border rounded px-2 py-1 mr-3"
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="draft">Draft</option>
+                      </select>
+                      <button onClick={() => handleEditPost(post)} className="text-secondary hover:underline mr-3">Edit</button>
+                      <button onClick={() => handleDeletePost(post.id)} className="text-red-500 hover:underline">Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        )}
+        </>
+        )}
+
+        {activeTab === 'faqs' && (
+        <>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+          {[
+            { label: 'Total FAQs', value: faqs.length },
+            { label: 'Active', value: faqs.filter((f) => f.status === 'active').length },
+            { label: 'Candidate', value: faqs.filter((f) => f.audience === 'candidate' || f.audience === 'both').length },
+            { label: 'Recruiter', value: faqs.filter((f) => f.audience === 'recruiter' || f.audience === 'both').length },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-white rounded-xl border border-border/50 p-4 text-center">
+              <p className="text-2xl font-bold text-secondary">{stat.value}</p>
+              <p className="text-alt">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* FAQ Form */}
+        {showFaqForm && (
+          <div className="bg-white rounded-2xl border border-border/50 p-6 mb-8">
+            <h4 className="mb-4">{editingFaq ? 'Edit FAQ' : 'New FAQ'}</h4>
+            <Input label="Question" value={faqForm.question} onChange={(e) => setFaqForm({ ...faqForm, question: e.target.value })} />
+            <Textarea label="Answer" value={faqForm.answer} onChange={(e) => setFaqForm({ ...faqForm, answer: e.target.value })} className="mt-4" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+              <Input label="Category" value={faqForm.category} onChange={(e) => setFaqForm({ ...faqForm, category: e.target.value })} />
+              <Select
+                label="Audience"
+                value={faqForm.audience}
+                onChange={(e) => setFaqForm({ ...faqForm, audience: e.target.value as FAQ['audience'] })}
+                options={[
+                  { value: 'both', label: 'Both' },
+                  { value: 'candidate', label: 'Candidate' },
+                  { value: 'recruiter', label: 'Recruiter' },
+                ]}
+              />
+              <Input
+                label="Sort Order"
+                type="number"
+                value={faqForm.sort_order}
+                onChange={(e) => setFaqForm({ ...faqForm, sort_order: Number(e.target.value) })}
+              />
+            </div>
+            <div className="flex gap-3 mt-6">
+              <Button variant="primary" size="sm" onClick={handleSaveFaq}>Save</Button>
+              <Button variant="ghost" size="sm" onClick={() => { setShowFaqForm(false); setEditingFaq(null) }}>Cancel</Button>
+            </div>
+          </div>
+        )}
+
+        {/* FAQs Table */}
+        {faqsLoading ? (
+          <div className="bg-white rounded-2xl border border-border/50 p-10 text-center text-accent/60">
+            Loading FAQs...
+          </div>
+        ) : faqsError ? (
+          <div className="bg-white rounded-2xl border border-red-200 p-10 text-center text-red-500">
+            Failed to load FAQs: {faqsError}
+          </div>
+        ) : (
+        <div className="bg-white rounded-2xl border border-border/50 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-accent/5">
+                <tr>
+                  <th className="text-left p-4 font-medium">Question</th>
+                  <th className="text-left p-4 font-medium hidden md:table-cell">Category</th>
+                  <th className="text-left p-4 font-medium hidden md:table-cell">Audience</th>
+                  <th className="text-left p-4 font-medium">Status</th>
+                  <th className="text-right p-4 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {faqs.map((faq) => (
+                  <tr key={faq.id} className="border-t border-border/50 hover:bg-accent/5">
+                    <td className="p-4">
+                      <p className="font-medium">{faq.question}</p>
+                    </td>
+                    <td className="p-4 hidden md:table-cell text-accent/60">{faq.category}</td>
+                    <td className="p-4 hidden md:table-cell text-accent/60 capitalize">{faq.audience}</td>
+                    <td className="p-4">
+                      <span className={`px-2 py-0.5 text-xs rounded-full ${
+                        faq.status === 'active'
+                          ? 'bg-green-50 text-green-600'
+                          : 'bg-red-50 text-red-500'
+                      }`}>{faq.status}</span>
+                    </td>
+                    <td className="p-4 text-right">
+                      <button onClick={() => handleToggleFaqStatus(faq)} className="text-secondary hover:underline mr-3">
+                        {faq.status === 'active' ? 'Deactivate' : 'Activate'}
+                      </button>
+                      <button onClick={() => handleEditFaq(faq)} className="text-secondary hover:underline mr-3">Edit</button>
+                      <button onClick={() => handleDeleteFaq(faq.id)} className="text-red-500 hover:underline">Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
         )}
         </>
         )}

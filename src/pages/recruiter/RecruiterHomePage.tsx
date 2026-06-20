@@ -4,7 +4,8 @@ import { motion } from 'framer-motion'
 import { GeometricShapes } from '../../components/common/GeometricShapes'
 import { Button } from '../../components/common/Button'
 import { TestimonialsSection } from '../../components/ui/TestimonialsSection'
-import { RecruiterReviewForm } from '../../components/forms/RecruiterReviewForm.tsx'
+import { RecruiterReviewForm } from '../../components/forms/RecruiterReviewForm'
+import { StatsBar } from '../../components/ui/StatsBar'
 import { HOW_IT_WORKS_RECRUITER, TESTIMONIALS } from '../../data/content'
 import type { Testimonial } from '../../types'
 import { supabase, isSupabaseConfigured } from '../../lib/supabase'
@@ -37,6 +38,7 @@ export function RecruiterHomePage() {
     <>
       <section className="relative section-padding overflow-hidden">
         <GeometricShapes variant="hero" />
+        <GeometricShapes variant="route" />
         <div className="container-custom relative z-10">
           <div className="max-w-3xl">
             <motion.h1
@@ -69,11 +71,14 @@ export function RecruiterHomePage() {
               </Link>
             </motion.div>
           </div>
+          <div className="mt-14 md:mt-16">
+            <StatsBar />
+          </div>
         </div>
       </section>
 
       {/* Services Overview */}
-      <section className="section-padding bg-secondary-light/20 relative">
+      <section className="section-padding bg-secondary-light relative">
         <GeometricShapes variant="section" />
         <div className="container-custom relative z-10">
           <div className="text-center mb-12">
@@ -107,6 +112,7 @@ export function RecruiterHomePage() {
 
       {/* How it Works */}
       <section className="section-padding relative">
+        <GeometricShapes variant="section" />
         <div className="container-custom">
           <div className="text-center mb-12">
             <h2>How it Works for Employers</h2>
@@ -156,17 +162,20 @@ export function RecruiterHomePage() {
       <section className="section-padding">
         <div className="container-custom">
           <div className="bg-secondary rounded-3xl p-8 md:p-16 text-white text-center relative overflow-hidden" style={{ 
-            backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url(public/arte_homepage_background.jpg)',
+            backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(public/arte_homepage_background.jpg)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             }}>
+            <GeometricShapes variant="footer" />
+            <div className="relative z-10">
             <h2 className="text-white">Looking for employees?</h2>
             <p className="mt-4 text-white/80 max-w-xl mx-auto">
               Register today and we will recruit the best talent for you!
             </p>
             <Link to="/register?role=recruiter" className="inline-block mt-8">
-              <Button variant="primary" size="lg">Get Started</Button>
+              <Button variant="secondary" size="lg">Get Started</Button>
             </Link>
+            </div>
           </div>
         </div>
       </section>
