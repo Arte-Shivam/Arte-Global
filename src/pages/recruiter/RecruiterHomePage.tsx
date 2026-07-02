@@ -6,6 +6,7 @@ import { Button } from '../../components/common/Button'
 import { TestimonialsSection } from '../../components/ui/TestimonialsSection'
 import { RecruiterReviewForm } from '../../components/forms/RecruiterReviewForm'
 import { StatsBar } from '../../components/ui/StatsBar'
+import { BlogPopup } from '../../components/ui/BlogPopup'
 import { HOW_IT_WORKS_RECRUITER, TESTIMONIALS } from '../../data/content'
 import type { Testimonial } from '../../types'
 import { supabase, isSupabaseConfigured } from '../../lib/supabase'
@@ -36,6 +37,7 @@ export function RecruiterHomePage() {
 
   return (
     <>
+      <BlogPopup blogBasePath="/recruiter/blog" delay={2000} />
       <section className="relative section-padding overflow-hidden">
         <GeometricShapes variant="hero" />
         <GeometricShapes variant="route" />
@@ -162,7 +164,7 @@ export function RecruiterHomePage() {
       <section className="section-padding">
         <div className="container-custom">
           <div className="bg-secondary rounded-3xl p-8 md:p-16 text-white text-center relative overflow-hidden" style={{ 
-            backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(public/arte_homepage_background.jpg)',
+            backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(/arte_homepage_background.jpg)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             }}>

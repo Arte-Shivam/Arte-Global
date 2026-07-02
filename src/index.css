@@ -88,3 +88,22 @@
     @apply max-w-7xl mx-auto w-full;
   }
 }
+
+/* Scrollbar track (background) */
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0) !important;
+}
+
+/* Scrollbar thumb (the moving part) */
+::-webkit-scrollbar-thumb {
+  background: #0089cf; /* or any color */
+  border-radius: 10px;
+
+}
+
+/* Optional: scrollbar width */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+

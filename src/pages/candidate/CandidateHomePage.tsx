@@ -7,6 +7,7 @@ import { JobCard } from '../../components/ui/JobCard'
 import { TestimonialsSection } from '../../components/ui/TestimonialsSection'
 import { MediaCarousel } from '../../components/ui/MediaCarousel'
 import { StatsBar } from '../../components/ui/StatsBar'
+import { BlogPopup } from '../../components/ui/BlogPopup'
 import { ReviewForm } from '../../components/forms/ReviewForm'
 import {
   COMPANY, DEMO_JOBS, DEMO_MEDIA, HOW_IT_WORKS_CANDIDATE, TESTIMONIALS,
@@ -64,6 +65,7 @@ export function CandidateHomePage() {
 
   return (
     <>
+      <BlogPopup blogBasePath="/candidate/blog" delay={2000} />
       {/* Hero */}
       <section className="relative section-padding overflow-hidden">
         <GeometricShapes variant="hero" />
@@ -126,7 +128,7 @@ export function CandidateHomePage() {
       <section className="section-padding relative">
         <div className="container-custom">
           <div className="bg-accent rounded-3xl p-8 md:p-16 text-white relative overflow-hidden" style={{ 
-            backgroundImage: 'url(public/Europe-Arte.png)',
+            backgroundImage: 'url(/Europe-Arte.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             }}>

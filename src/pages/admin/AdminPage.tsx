@@ -8,7 +8,7 @@ import type { Job, CandidateReview, RecruiterReview, BlogPost, FAQ } from '../..
 import { slugify } from '../../lib/utils'
 import { supabase, isSupabaseConfigured } from '../../lib/supabase'
 
-type AdminTab = 'jobs' | 'reviews' | 'recruiter-reviews' | 'blogs' | 'faqs'
+type AdminTab = 'jobs' | 'reviews' | 'recruiter-reviews' | 'blogs' | 'faqs' | 'settings'
 
 export function AdminPage() {
   const { user, isAdmin, loading } = useAuth()
@@ -151,6 +151,27 @@ export function AdminPage() {
     loadFaqs()
   }, [])
 
+  useEffect(() => {
+    async function loadSettings() {
+      if (!isSupabaseConfigured || !supabase) {
+        setSettingsLoading(false)
+        return
+      }
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('featured_blog_id, popup_enabled')
+        .eq('id', 1)
+        .single()
+
+      if (!error && data) {
+        setSettingsFeaturedBlogId(data.featured_blog_id ?? '')
+        setSettingsPopupEnabled(data.popup_enabled ?? true)
+      }
+      setSettingsLoading(false)
+    }
+    loadSettings()
+  }, [])
+
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -166,6 +187,7 @@ export function AdminPage() {
     excerpt: '',
     content: '',
     cover_image: '',
+    banner_image: '',
     author: 'Arte Team',
   })
 
@@ -176,6 +198,12 @@ export function AdminPage() {
     audience: 'both' as FAQ['audience'],
     sort_order: 0,
   })
+
+  const [settingsFeaturedBlogId, setSettingsFeaturedBlogId] = useState<string>('')
+  const [settingsPopupEnabled, setSettingsPopupEnabled] = useState<boolean>(true)
+  const [settingsLoading, setSettingsLoading] = useState(true)
+  const [settingsSaving, setSettingsSaving] = useState(false)
+  const [settingsSaved, setSettingsSaved] = useState(false)
 
   if (loading) {
     return <div className="section-padding text-center">Loading...</div>
@@ -299,6 +327,7 @@ export function AdminPage() {
         .update({
           ...postForm,
           cover_image: postForm.cover_image || null,
+          banner_image: postForm.banner_image || null,
           slug: slugify(postForm.title),
           updated_at: new Date().toISOString(),
         })
@@ -318,6 +347,7 @@ export function AdminPage() {
         .insert({
           ...postForm,
           cover_image: postForm.cover_image || null,
+          banner_image: postForm.banner_image || null,
           slug: slugify(postForm.title),
           status: 'draft',
           published_at: new Date().toISOString(),
@@ -332,7 +362,7 @@ export function AdminPage() {
       setPosts([data as BlogPost, ...posts])
     }
     setShowPostForm(false)
-    setPostForm({ title: '', excerpt: '', content: '', cover_image: '', author: 'Arte Team' })
+    setPostForm({ title: '', excerpt: '', content: '', cover_image: '', banner_image: '', author: 'Arte Team' })
   }
 
   function handleEditPost(post: BlogPost) {
@@ -342,6 +372,7 @@ export function AdminPage() {
       excerpt: post.excerpt,
       content: post.content,
       cover_image: post.cover_image || '',
+      banner_image: post.banner_image || '',
       author: post.author,
     })
     setShowPostForm(true)
@@ -454,6 +485,29 @@ export function AdminPage() {
       return
     }
     setFaqs(faqs.map((f) => f.id === faq.id ? (data as FAQ) : f))
+  }
+
+  async function handleSaveSettings() {
+    if (!supabase) return
+    setSettingsSaving(true)
+    setSettingsSaved(false)
+
+    const { error } = await supabase
+      .from('site_settings')
+      .update({
+        featured_blog_id: settingsFeaturedBlogId || null,
+        popup_enabled: settingsPopupEnabled,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', 1)
+
+    setSettingsSaving(false)
+    if (error) {
+      alert('Failed to save settings: ' + error.message)
+    } else {
+      setSettingsSaved(true)
+      setTimeout(() => setSettingsSaved(false), 3000)
+    }
   }
 
   async function handleApproveReview(review: CandidateReview) {
@@ -612,6 +666,14 @@ export function AdminPage() {
             }`}
           >
             FAQs
+          </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
+              activeTab === 'settings' ? 'border-secondary text-secondary' : 'border-transparent text-accent/60'
+            }`}
+          >
+            Settings
           </button>
         </div>
 
@@ -849,13 +911,24 @@ export function AdminPage() {
               <Input label="Title" value={postForm.title} onChange={(e) => setPostForm({ ...postForm, title: e.target.value })} />
               <Input label="Author" value={postForm.author} onChange={(e) => setPostForm({ ...postForm, author: e.target.value })} />
             </div>
-            <Input
-              label="Cover Image URL (optional)"
-              value={postForm.cover_image}
-              onChange={(e) => setPostForm({ ...postForm, cover_image: e.target.value })}
-              className="mt-4"
-              placeholder="https://... — leave blank to use the default placeholder"
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <Input
+                  label="Cover Image URL (1:1 square)"
+                  value={postForm.cover_image}
+                  onChange={(e) => setPostForm({ ...postForm, cover_image: e.target.value })}
+                  placeholder="Used on cards and popup — 1080×1080 recommended"
+                />
+              </div>
+              <div>
+                <Input
+                  label="Banner Image URL (3:1 wide)"
+                  value={postForm.banner_image}
+                  onChange={(e) => setPostForm({ ...postForm, banner_image: e.target.value })}
+                  placeholder="Used at top of blog post — 1620×540 recommended"
+                />
+              </div>
+            </div>
             <Textarea label="Excerpt" value={postForm.excerpt} onChange={(e) => setPostForm({ ...postForm, excerpt: e.target.value })} className="mt-4" />
             <Textarea label="Content" value={postForm.content} onChange={(e) => setPostForm({ ...postForm, content: e.target.value })} className="mt-4" />
             <div className="flex gap-3 mt-6">
@@ -1026,6 +1099,85 @@ export function AdminPage() {
           </div>
         </div>
         )}
+        </>
+        )}
+
+        {activeTab === 'settings' && (
+        <>
+        <div className="bg-white rounded-2xl border border-border/50 p-6 md:p-8 max-w-xl">
+          <h4 className="mb-1">Blog Popup</h4>
+          <p className="text-sm text-accent/60 mb-6">
+            Select a blog post to feature in the popup shown to visitors on the homepage.
+            Only active blog posts are listed.
+          </p>
+
+          {settingsLoading ? (
+            <p className="text-sm text-accent/60">Loading settings...</p>
+          ) : (
+            <div className="space-y-6">
+
+              {/* Popup enabled toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-sm">Enable Popup</p>
+                  <p className="text-xs text-accent/60 mt-0.5">Turn off to hide the popup from all visitors</p>
+                </div>
+                <button
+                  onClick={() => setSettingsPopupEnabled(!settingsPopupEnabled)}
+                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${
+                    settingsPopupEnabled ? 'bg-secondary' : 'bg-accent/20'
+                  }`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${
+                    settingsPopupEnabled ? 'translate-x-5' : 'translate-x-0'
+                  }`} />
+                </button>
+              </div>
+
+              {/* Featured blog selector */}
+              <div>
+                <label className="text-sm font-medium text-accent block mb-1.5">
+                  Featured Blog Post
+                </label>
+                <select
+                  value={settingsFeaturedBlogId}
+                  onChange={(e) => setSettingsFeaturedBlogId(e.target.value)}
+                  disabled={!settingsPopupEnabled}
+                  className="w-full px-4 py-3 rounded-lg border border-border bg-white text-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <option value="">— No blog selected —</option>
+                  {posts
+                    .filter((p) => p.status === 'active')
+                    .map((p) => (
+                      <option key={p.id} value={p.id}>{p.title}</option>
+                    ))
+                  }
+                </select>
+                {posts.filter((p) => p.status === 'active').length === 0 && (
+                  <p className="text-xs text-red-500 mt-1.5">
+                    No active blog posts found. Publish a blog post first to feature it here.
+                  </p>
+                )}
+              </div>
+
+              {/* Save button */}
+              <div className="flex items-center gap-4 pt-2">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleSaveSettings}
+                  disabled={settingsSaving}
+                >
+                  {settingsSaving ? 'Saving...' : 'Save Settings'}
+                </Button>
+                {settingsSaved && (
+                  <p className="text-sm text-green-600 font-medium">✓ Saved successfully</p>
+                )}
+              </div>
+
+            </div>
+          )}
+        </div>
         </>
         )}
       </div>

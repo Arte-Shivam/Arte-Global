@@ -82,6 +82,7 @@ export interface BlogPost {
   excerpt: string
   content: string
   cover_image?: string
+  banner_image?: string
   author: string
   published_at: string
   status: 'active' | 'inactive' | 'draft'

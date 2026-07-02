@@ -57,7 +57,7 @@ export function BlogPage({ basePath = '/candidate/blog' }: BlogPageProps) {
         ) : posts.length === 0 ? (
           <div className="text-center py-16 text-accent/60">No blog posts yet. Check back soon.</div>
         ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {posts.map((post, index) => (
             <motion.article
               key={post.id}
@@ -67,11 +67,11 @@ export function BlogPage({ basePath = '/candidate/blog' }: BlogPageProps) {
               transition={{ delay: index * 0.1 }}
               className="bg-white rounded-2xl border border-border/50 overflow-hidden hover:shadow-lg transition-shadow group"
             >
-              <div className="h-48 bg-secondary-light overflow-hidden">
+              <div className="aspect-square bg-secondary-light overflow-hidden">
                 <img
                   src={post.cover_image || '/blog-placeholder.jpg'}
                   alt=""
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               </div>
               <div className="p-6">

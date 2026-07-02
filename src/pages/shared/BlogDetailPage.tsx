@@ -56,11 +56,13 @@ export function BlogDetailPage({ basePath = '/candidate/blog' }: BlogDetailPageP
           <img src="/icons/arrow-left.svg" alt="" className="w-4 h-4" />
           Back to Blog
         </Link>
-        <img
-          src={post.cover_image || '/blog-placeholder.jpg'}
-          alt=""
-          className="w-full h-64 md:h-80 object-cover rounded-2xl"
-        />
+        <div className="w-full overflow-hidden rounded-2xl bg-secondary-light">
+          <img
+            src={post.banner_image || post.cover_image || '/blog-placeholder.jpg'}
+            alt=""
+            className="w-full aspect-[3/1] object-cover"
+          />
+        </div>
         <p className="text-alt mt-6">{formatDate(post.published_at)} · {post.author}</p>
         <h1 className="mt-2">{post.title}</h1>
         <div className="mt-8 prose max-w-none">

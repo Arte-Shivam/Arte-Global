@@ -4,7 +4,7 @@ declare global {
   }
 }
  
-const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX'
+const GA_MEASUREMENT_ID = 'G-BK3P6SLXSV'
  
 export function trackPageview(path: string) {
   if (typeof window === 'undefined' || !window.gtag) return

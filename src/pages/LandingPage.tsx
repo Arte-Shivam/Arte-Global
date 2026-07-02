@@ -55,7 +55,7 @@ export function LandingPage() {
           <motion.button
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.2, delay: 0 }}
             whileHover={{ scale: 1.02, y: -4 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => handleChoice('candidate')}
@@ -77,7 +77,7 @@ export function LandingPage() {
           <motion.button
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            transition={{ duration: 0.2, delay: 0 }}
             whileHover={{ scale: 1.02, y: -4 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => handleChoice('recruiter')}
